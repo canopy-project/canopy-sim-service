@@ -37,9 +37,118 @@ func main() {
     r := mux.NewRouter().StrictSlash(false)
 
     r.HandleFunc("/drones_started", DronesStartedHandler)
+    r.HandleFunc("/batch_report", BatchReportHandler)
 
     fmt.Println("Starting server on :8383")
     http.ListenAndServe(":8383", r)
+}
+
+/*
+ * /batch_report
+ * Takes payload: 
+ *  {
+ *      "simHostname" : string,
+ *      "testname" : string,
+ *      "avgReportPeriod" : numeric,
+ *      "avgReportPeriodCount" : numeric,
+ *      "responseAvgLatency" : numeric,
+ *      "responseAvgLatencyCount" : numeric,
+ *      "responseMinLatency" : numeric,
+ *      "responseMaxLatency" : numeric,
+ *  }
+ */
+func BatchReportHandler(w http.ResponseWriter, r *http.Request) {
+    // Decode payload
+    inPayload, err := ReadAndDecodeRequestBody(r)
+    if err != nil {
+        out := fmt.Sprintf("{\"error\" : \"%s\"}\n", err.Error())
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    fmt.Println(inPayload)
+
+    // Read fields
+    testname, ok := inPayload["testname"].(string)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected string field \\\"testname\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    simHostname, ok := inPayload["simHostname"].(string)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected string field \\\"simHostname\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    avgReportPeriod, ok := inPayload["avgReportPeriod"].(float64)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected numeric field \\\"avgReportPeriod\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    avgReportPeriodCount, ok := inPayload["avgReportPeriodCount"].(float64)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected numeric field \\\"avgReportPeriodCount\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    responseAvgLatency, ok := inPayload["responseAvgLatency"].(float64)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected numeric field \\\"responseAvgLatency\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    responseAvgLatencyCount, ok := inPayload["responseAvgLatencyCount"].(float64)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected numeric field \\\"responseAvgLatencyCount\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    responseMinLatency, ok := inPayload["responseMinLatency"].(float64)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected numeric field \\\"responseMinLatency\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    responseMaxLatency, ok := inPayload["responseMaxLatency"].(float64)
+    if !ok {
+        out := fmt.Sprintf("{\"error\" : \"Expected numeric field \\\"responseMaxLatency\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
+        return
+    }
+
+    // Create test if necessary
+    test, ok := gService.tests[testname]
+    if !ok {
+        fmt.Println("creating test", testname)
+        test = &CanopySimTest{
+            testname: testname,
+        }
+        gService.tests[testname] = test
+    }
+    fmt.Println(testname, simHostname, responseAvgLatency, responseMinLatency, responseMaxLatency, responseAvgLatencyCount, avgReportPeriod, avgReportPeriodCount)
+
+    // Send response
+    out := fmt.Sprintf("{\"result\" : \"Thanks for your data!\"}\n")
+    fmt.Printf("%s", out)
+    fmt.Fprintf(w, "%s", out)
 }
 
 /*

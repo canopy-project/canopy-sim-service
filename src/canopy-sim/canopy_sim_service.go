@@ -20,11 +20,18 @@ import (
     "github.com/gorilla/mux"
 )
 
-type CanopySimService struct {
+type CanopySimTest struct {
     droneCnt int64
+    testname string
 }
 
-var gService = CanopySimService{}
+type CanopySimService struct {
+    tests map[string]*CanopySimTest
+}
+
+var gService = CanopySimService{
+    tests: map[string]*CanopySimTest{},
+}
 
 func main() {
     r := mux.NewRouter().StrictSlash(false)
@@ -43,12 +50,14 @@ func main() {
  *  }
  */
 func DronesStartedHandler(w http.ResponseWriter, r *http.Request) {
+    // Decode payload
     inPayload, err := ReadAndDecodeRequestBody(r)
     if err != nil {
         fmt.Fprintf(w, "{\"error\" : \"%s\"}\n", err.Error())
         return
     }
-    
+   
+    // Read fields
     cnt_f64, ok := inPayload["cnt"].(float64)
     if !ok {
         fmt.Fprintf(w, "{\"error\" : \"Expected integer field \\\"cnt\\\"\"}\n")
@@ -61,9 +70,18 @@ func DronesStartedHandler(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "{\"error\" : \"Expected string field \\\"testname\\\"\"}\n")
         return
     }
-    fmt.Println(inPayload, cnt, testname)
-    gService.droneCnt += cnt
-    fmt.Fprintf(w, "{\"drone_cnt\" : %d}\n", gService.droneCnt)
+
+    // Create test if necessary
+    test, ok := gService.tests[testname]
+    if !ok {
+        fmt.Println("creating test", testname)
+        test = &CanopySimTest{
+            testname: testname,
+        }
+        gService.tests[testname] = test
+    }
+    test.droneCnt += cnt
+    fmt.Fprintf(w, "{\"testname\" : \"%s\", \"drone_cnt\" : %d}\n", test.testname, test.droneCnt)
 }
 
 func ReadAndDecodeRequestBody(r *http.Request) (map[string]interface{}, error) {

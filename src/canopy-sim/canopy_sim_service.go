@@ -53,21 +53,27 @@ func DronesStartedHandler(w http.ResponseWriter, r *http.Request) {
     // Decode payload
     inPayload, err := ReadAndDecodeRequestBody(r)
     if err != nil {
-        fmt.Fprintf(w, "{\"error\" : \"%s\"}\n", err.Error())
+        out := fmt.Sprintf("{\"error\" : \"%s\"}\n", err.Error())
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
         return
     }
    
     // Read fields
     cnt_f64, ok := inPayload["cnt"].(float64)
     if !ok {
-        fmt.Fprintf(w, "{\"error\" : \"Expected integer field \\\"cnt\\\"\"}\n")
+        out := fmt.Sprintf("{\"error\" : \"Expected integer field \\\"cnt\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
         return
     }
     cnt := int64(cnt_f64)
 
     testname, ok := inPayload["testname"].(string)
     if !ok {
-        fmt.Fprintf(w, "{\"error\" : \"Expected string field \\\"testname\\\"\"}\n")
+        out := fmt.Sprintf("{\"error\" : \"Expected string field \\\"testname\\\"\"}\n")
+        fmt.Printf("%s", out)
+        fmt.Fprintf(w, "%s", out)
         return
     }
 
@@ -81,7 +87,9 @@ func DronesStartedHandler(w http.ResponseWriter, r *http.Request) {
         gService.tests[testname] = test
     }
     test.droneCnt += cnt
-    fmt.Fprintf(w, "{\"testname\" : \"%s\", \"drone_cnt\" : %d}\n", test.testname, test.droneCnt)
+    out := fmt.Sprintf("{\"testname\" : \"%s\", \"drone_cnt\" : %d}\n", test.testname, test.droneCnt)
+    fmt.Printf("%s", out)
+    fmt.Fprintf(w, "%s", out)
 }
 
 func ReadAndDecodeRequestBody(r *http.Request) (map[string]interface{}, error) {
